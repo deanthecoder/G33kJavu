@@ -1,14 +1,30 @@
+// Code authored by Dean Edis (DeanTheCoder).
+// Anyone is free to copy, modify, use, compile, or distribute this software,
+// either in source code form or as a compiled binary, for any
+// purpose.
+//
+// If you modify the code, please retain this copyright header,
+// and consider contributing back to the repository or letting us know
+// about your modifications. Your contributions are valued!
+//
+// THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND.
+
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using G33kJavu.Views;
+using G33kJavu.ViewModels;
 
 namespace G33kJavu;
 
 public partial class App : Application
 {
+    private readonly AppViewModel m_viewModel = new AppViewModel();
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        DataContext = m_viewModel;
     }
 
     public override void OnFrameworkInitializationCompleted()

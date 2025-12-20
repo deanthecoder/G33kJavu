@@ -1,0 +1,270 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:G33kJavu.ViewModels"
+        xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
+        xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:converters="clr-namespace:G33kJavu.Converters"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="G33kJavu.Views.MainWindow"
+        x:DataType="viewModels:MainWindowViewModel"
+        Width="1200" Height="800"
+        MinWidth="900" MinHeight="560"
+        Icon="/Assets/app.ico"
+        Background="{DynamicResource AppBackgroundBrush}"
+        DragDrop.AllowDrop="True"
+        Title="{Binding WindowTitle}">
+
+    <Design.DataContext>
+        <viewModels:MainWindowViewModel />
+    </Design.DataContext>
+
+    <Window.Resources>
+        <converters:BoolToBrushConverter x:Key="BoolToBrushConverter"
+                                         TrueBrush="{StaticResource SubtlePanelBrush}"
+                                         FalseBrush="Transparent"/>
+
+        <converters:DiffMarkerKindToBrushConverter x:Key="DiffMarkerKindToBrushConverter"
+                                                   ExactBrush="{StaticResource DiffExactBrush}"
+                                                   NormalizedBrush="{StaticResource DiffNormalizedBrush}"
+                                                   DifferentBrush="{StaticResource DiffDifferentBrush}"
+                                                   ErrorBrush="{StaticResource DiffErrorBrush}" />
+    </Window.Resources>
+
+    <dialogHostAvalonia:DialogHost x:Name="Host" OverlayBackground="#AA000000">
+        <Grid RowDefinitions="Auto,*">
+            <Border Background="{DynamicResource PaneBackgroundBrush}" Padding="10,8">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" DockPanel.Dock="Left">
+                        <Button Content="Select Folder…" Command="{Binding SelectFolder}" />
+                        <Button Content="Rescan" Command="{Binding Rescan}" IsEnabled="{Binding CanRescan}" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <Grid Grid.Row="1" ColumnDefinitions="360,Auto,*" Margin="10">
+                <Border Background="{DynamicResource PaneBackgroundBrush}" CornerRadius="6" Padding="10">
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <TextBlock Text="Folders" FontSize="15" Foreground="{DynamicResource HeadingBrush}" />
+                        <TreeView Grid.Row="1"
+                                  ItemsSource="{Binding FolderTreeRoots}"
+                                  SelectedItem="{Binding SelectedFolder}">
+                            <TreeView.ItemTemplate>
+                                <TreeDataTemplate ItemsSource="{Binding Children}">
+                                    <TextBlock Text="{Binding Name}" />
+                                </TreeDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+
+                        <Border Grid.Row="2" Background="{DynamicResource SubtlePanelBrush}" CornerRadius="6" Padding="10" Margin="0,10,0,0">
+                            <StackPanel Spacing="10">
+                                <StackPanel Spacing="6">
+                                    <CheckBox Content="Ignore string content"
+                                              IsChecked="{Binding IgnoreStringContent}"
+                                              ToolTip.Tip="When enabled, string literals are replaced with STR during matching (with heuristics to preserve code-like/data strings)." />
+
+                                    <CheckBox Content="Ignore comments"
+                                              IsChecked="{Binding IgnoreComments}"
+                                              ToolTip.Tip="When enabled, lines that look like comment-only lines are excluded (//, /*, *, or */)." />
+
+                                    <CheckBox Content="Hide cloned files"
+                                              IsChecked="{Binding HideClonedFiles}"
+                                              ToolTip.Tip="Hides results where both files are identical clones with the same file name." />
+                                    <CheckBox Content="Hide same file names"
+                                              IsChecked="{Binding HideSameFileNames}"
+                                              ToolTip.Tip="Hides results where the two files share the same file name, even if the contents differ." />
+                                </StackPanel>
+
+                                <Expander Header="Settings" IsExpanded="{Binding IsSettingsExpanded}">
+                                    <Grid ColumnDefinitions="Auto,120" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="0,8,0,0">
+                                        <TextBlock Text="k (shingle lines)" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,8"
+                                                   ToolTip.Tip="Fingerprint uses k consecutive normalized lines. Larger k reduces noise but may miss shorter duplicates."/>
+                                        <NumericUpDown Grid.Row="0" Grid.Column="1" Value="{Binding Settings.K}" Minimum="4" Maximum="40" Margin="0,0,0,8"
+                                                     ToolTip.Tip="Fingerprint uses k consecutive normalized lines."/>
+
+                                        <TextBlock Text="w (winnow window)" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,8"
+                                                   ToolTip.Tip="Winnowing window size. Larger w keeps fewer fingerprints (faster, less sensitive)."/>
+                                        <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Settings.W}" Minimum="2" Maximum="40" Margin="0,0,0,8"
+                                                     ToolTip.Tip="Winnowing window size."/>
+
+                                        <TextBlock Text="Min report lines" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,8"
+                                                   ToolTip.Tip="Minimum matched (normalized) line count required to report a duplicate block."/>
+                                        <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding Settings.MinReportLines}" Minimum="5" Maximum="500" Margin="0,0,0,8"
+                                                     ToolTip.Tip="Minimum matched (normalized) line count required to report a duplicate block."/>
+
+                                        <TextBlock Text="Gap allowance" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,8"
+                                                   ToolTip.Tip="Allowed gaps between consecutive fingerprint seeds on a diagonal when forming candidate runs."/>
+                                        <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding Settings.GapAllowance}" Minimum="0" Maximum="20" Margin="0,0,0,8"
+                                                     ToolTip.Tip="Allowed gaps between consecutive fingerprint seeds when forming runs."/>
+
+                                        <TextBlock Text="Max occurrences" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                   ToolTip.Tip="Fingerprints seen in more than this many places are dropped as boilerplate/noise."/>
+                                        <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding Settings.MaxOccurrencesPerFingerprint}" Minimum="10" Maximum="2000"
+                                                     ToolTip.Tip="Fingerprints seen in more than this many places are dropped as boilerplate/noise."/>
+                                    </Grid>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <GridSplitter Grid.Column="1"
+                              Width="6"
+                              Background="{DynamicResource SeparatorBrush}"
+                              ResizeDirection="Columns"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch" />
+
+                <Border Grid.Column="2" Background="{DynamicResource PaneBackgroundBrush}" CornerRadius="6" Padding="10">
+                    <Grid RowDefinitions="Auto,*,Auto,*">
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+                            <TextBlock Text="Duplicates" FontSize="15" Foreground="{DynamicResource HeadingBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding MatchSummaryText}" Opacity="0.75" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </Grid>
+
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding Matches}"
+                                 SelectedItem="{Binding SelectedMatch}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="viewModels:DuplicateMatchViewModel" x:CompileBindings="False">
+                                            <Border BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto">
+                                            <Border Background="{DynamicResource AccentPillBrush}" CornerRadius="10" Padding="8,3" VerticalAlignment="Top"
+                                                    ToolTip.Tip="{Binding MatchedLineCount, StringFormat='{}{0} common lines'}">
+                                                <TextBlock Text="{Binding MatchedLineCount}" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Spacing="2" Margin="10,0,0,0">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding FileAName}" ToolTip.Tip="{Binding FileAFullPath}" />
+                                                    <TextBlock Text="↔" Opacity="0.75" />
+                                                    <TextBlock Text="{Binding FileBName}" ToolTip.Tip="{Binding FileBFullPath}" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding RangeSummary}" Opacity="0.75" />
+                                            </StackPanel>
+                                            <Button Grid.Column="2"
+                                                    Content="Copy Info"
+                                                    VerticalAlignment="Center"
+                                                    Command="{Binding DataContext.CopyMatchInfo, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <GridSplitter Grid.Row="2"
+                                      Height="6"
+                                      Background="{DynamicResource SeparatorBrush}"
+                                      ResizeDirection="Rows"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch" />
+
+                        <Border Grid.Row="3" Background="{DynamicResource SubtlePanelBrush}" CornerRadius="6" Padding="10" Margin="0,10,0,0" VerticalAlignment="Stretch">
+                            <Grid RowDefinitions="Auto,*">
+                                <Grid ColumnDefinitions="Auto,*,72,24,72,*,Auto" Margin="0,0,0,8" x:CompileBindings="False">
+                                    <Button Grid.Column="0"
+                                            ToolTip.Tip="Reveal file A"
+                                            Command="{Binding DataContext.RevealFileA, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding DataContext.SelectedMatch, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            VerticalAlignment="Center"
+                                            Padding="4">
+                                        <icons:MaterialIcon Kind="FolderOpen" Width="16" Height="16" />
+                                    </Button>
+                                    <TextBlock Grid.Column="1" Text="{Binding DiffTitleA}" ToolTip.Tip="{Binding DiffToolTipA}" Opacity="0.85" />
+                                    <TextBlock Grid.Column="2" Text="" />
+                                    <TextBlock Grid.Column="3" Text="" />
+                                    <TextBlock Grid.Column="4" Text="" />
+                                    <TextBlock Grid.Column="5" Text="{Binding DiffTitleB}" ToolTip.Tip="{Binding DiffToolTipB}" Opacity="0.85" HorizontalAlignment="Right" />
+                                    <Button Grid.Column="6"
+                                            ToolTip.Tip="Reveal file B"
+                                            Command="{Binding DataContext.RevealFileB, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding DataContext.SelectedMatch, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            VerticalAlignment="Center"
+                                            Padding="4">
+                                        <icons:MaterialIcon Kind="FolderOpen" Width="16" Height="16" />
+                                    </Button>
+                                </Grid>
+
+                                <ListBox Grid.Row="1"
+                                         ItemsSource="{Binding DiffLines}"
+                                         Padding="0"
+                                         BorderThickness="1"
+                                         BorderBrush="{DynamicResource SeparatorBrush}"
+                                         Background="{DynamicResource CodeBackgroundBrush}"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <ListBox.Styles>
+                                        <Style Selector="ListBoxItem">
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="Margin" Value="0" />
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        </Style>
+                                    </ListBox.Styles>
+
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding IsInMatchedBlock, Converter={StaticResource BoolToBrushConverter}}"
+                                                    Padding="0"
+                                                    Margin="0">
+                                                <Grid ColumnDefinitions="*,72,24,72,*" Margin="0">
+                                                    <TextBlock Text="{Binding AText}"
+                                                               FontFamily="Menlo, Consolas"
+                                                               TextWrapping="NoWrap"
+                                                               Margin="0"
+                                                               ToolTip.Tip="{Binding AToolTip}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding ALineNumber}"
+                                                               FontFamily="Menlo, Consolas"
+                                                               Opacity="0.6"
+                                                               HorizontalAlignment="Right"
+                                                               Margin="0,0,0,0"/>
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding MarkerText}"
+                                                               ToolTip.Tip="{Binding MarkerToolTip}"
+                                                               Foreground="{Binding Kind, Converter={StaticResource DiffMarkerKindToBrushConverter}}"
+                                                               FontFamily="Menlo, Consolas"
+                                                               Opacity="0.9"
+                                                               HorizontalAlignment="Center"
+                                                               Margin="0"/>
+                                                    <TextBlock Grid.Column="3"
+                                                               Text="{Binding BLineNumber}"
+                                                               FontFamily="Menlo, Consolas"
+                                                               Opacity="0.6"
+                                                               HorizontalAlignment="Left"
+                                                               Margin="0"/>
+                                                    <TextBlock Grid.Column="4"
+                                                               Text="{Binding BText}"
+                                                               FontFamily="Menlo, Consolas"
+                                                               TextWrapping="NoWrap"
+                                                               ToolTip.Tip="{Binding BToolTip}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Border IsVisible="{Binding IsScanning}" Background="#AA000000" CornerRadius="6" Grid.ColumnSpan="3">
+                    <Border HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource PaneBackgroundBrush}" CornerRadius="8" Padding="18">
+                        <StackPanel Spacing="10" Width="420">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <icons:MaterialIcon Kind="Magnify" Width="20" Height="20" Opacity="0.85"/>
+                                <TextBlock Text="{Binding ProgressText}" FontSize="14" />
+                            </StackPanel>
+                            <ProgressBar IsIndeterminate="{Binding ProgressIsIndeterminate}" Value="{Binding ProgressPercent}" Height="10"/>
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                                <Button Content="Cancel" Command="{Binding CancelScan}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Border>
+            </Grid>
+        </Grid>
+    </dialogHostAvalonia:DialogHost>
+</Window>

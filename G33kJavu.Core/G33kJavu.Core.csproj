@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <Company>Dean Edis (DeanTheCoder)</Company>
+        <AssemblyName>G33kJavu.Core</AssemblyName>
+        <RootNamespace>G33kJavu.Core</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\DTC.Core\DTC.Core\DTC.Core.csproj" />
+    </ItemGroup>
+
+</Project>
+
