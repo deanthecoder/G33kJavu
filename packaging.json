@@ -1,0 +1,23 @@
+{
+  "ProductName": "G33kJavu",
+  "CompanyName": "Dean Edis (DeanTheCoder)",
+  "BundleIdentifier": "com.deanthecoder.g33kjavu",
+  "Project": "G33kJavu/G33kJavu.csproj",
+  "Win": {
+    "InnoScript": "Installer/templates/inno.iss",
+    "IconIco": "G33kJavu/Assets/app.ico",
+    "GUID": "{0B1ED684-A700-4F49-9E14-62B1953583D0}",
+    "RuntimeIdentifier": "win-x64"
+  },
+  "Mac": {
+    "RuntimeIdentifiers": [
+      "osx-arm64",
+      "osx-x64"
+    ],
+    "IconIcns": "G33kJavu/Assets/icon.icns",
+    "InfoPlist": "Installer/templates/Info.plist",
+    "VolumeName": "G33kJavu"
+  },
+  "PublisherUrl": "https://github.com/deanthecoder",
+  "Executable": "G33kJavu"
+}
